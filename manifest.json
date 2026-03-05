@@ -1,0 +1,17 @@
+{
+  "name": "Market Check Pro",
+  "short_name": "MCP",
+  "start_url": "/marketcheck/",
+  "display": "standalone",
+  "background_color": "#121212",
+  "theme_color": "#121212",
+  "description": "Elkjøp Butikksjekk Verktøy",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/1162/1162283.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
