@@ -10,9 +10,8 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#121212">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1162/1162283.png">
+    <link rel="manifest" href='data:application/manifest+json,{"display":"standalone","start_url":"/","name":"Market Check Pro","short_name":"MCP","theme_color":"#121212","background_color":"#121212","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/1162/1162283.png","sizes":"512x512","type":"image/png"}]}'>
 
-    <link rel="manifest" href="data:application/manifest+json,{'display':'standalone','start_url':'/','name':'Market Check Pro','short_name':'MCP','theme_color':'#121212','background_color':'#121212'}">
-    
     <style>
         :root { --primary: #00A3FF; --success: #4CAF50; --orange: #FF9800; --danger: #F44336; --bg: #121212; --card: #1e1e1e; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -50,8 +49,9 @@
         .info-btn { background: #444; color: white; border: none; }
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; justify-content: center; align-items: center; pointer-events: auto; }
         .modal { background: #2a2a2a; padding: 20px; border-radius: 15px; width: 90%; max-width: 400px; text-align: center; color: white; }
-        .modal textarea { width: 100%; height: 100px; background: #121212; color: white; padding: 10px; border: 1px solid #444; border-radius: 8px; margin-top: 10px; font-size: 16px; }
+        .modal textarea { width: 100%; height: 100px; background: #121212; color: white; padding: 10px; border: 1px solid #444; border-radius: 8px; margin-top: 10px; font-size: 16px; width:100%; }
         .info-content { text-align: left; font-size: 0.85rem; line-height: 1.4; max-height: 400px; overflow-y: auto; padding-right: 5px; }
+
         @media print {
             @page { size: auto; margin: 10mm; }
             body { background: white !important; padding: 0 !important; width: 100% !important; display: block !important; }
@@ -86,19 +86,18 @@
     <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none">
 
     <script>
+        /* SERVICE WORKER IN-PAGE TRIGGER */
+        if ('serviceWorker' in navigator) {
+          window.addEventListener('load', () => {
+            const blob = new Blob([`self.addEventListener('fetch', (e) => { e.respondWith(fetch(e.request)); });`], {type: 'application/javascript'});
+            navigator.serviceWorker.register(URL.createObjectURL(blob));
+          });
+        }
+
         const departments = ["Tele", "Data", "A/V", "MDA", "SDA", "Kjøkken", "Front", "Back"];
         const standardCats = ["Produkt på gulv/rot", "Hull i livestock", "Tomme pigger", "Ryddig salgsdisk", "Hull i utstilling", "Mangel pris", "Live utstilling", "Trau"];
-        const deptCats = {
-            "Tele": standardCats, "Data": standardCats, "A/V": standardCats, "MDA": standardCats, "SDA": standardCats,
-            "Kjøkken": ["Produkt på gulv/rot", "Hull i livestock", "Ryddig salgsdisk", "Hull i utstilling", "Mangel pris", "Live utstilling"],
-            "Front": ["Produkt på gulv/rot", "Tomme pigger", "Ryddig servicedisk", "Mangel pris", "Trau", "Ryddig P&P"],
-            "Back": ["Ryddig support", "Ryddig RFC", "Ryddig QI", "Ryddig varemottak", "Ryddig gang"]
-        };
-        const desc = {
-            std: { "Produkt på gulv/rot": "Synlig søppel, rot på gulv eller nederste/øverste hylle i planogram. -1 per rotete område.", "Hull i livestock": "Mangler varer i hyllene som burde vært fylt. -1 per hel hylle som mangler varer.", "Tomme pigger": "Hvor mange tomme pigger som er på avdelingen (-1 per 5 tomme pigger).", "Ryddig salgsdisk": "Ingen varer/drikkeflasker/søppel oppå eller i skuffer, ryddig og pent.", "Hull i utstilling": "-1 per utstilling som mangler.", "Mangel pris": "-1 per produkt/plass som mangler.", "Live utstilling": "-1 per utstilling som ikke er live.", "Trau": "-1 per trau som mangler pris eller ikke er fulle." },
-            front: { "Produkt på gulv/rot": "Synlig søppel, rot på gulv eller nederste/øverste hylle i planogram. -1 per rotete område.", "Tomme pigger": "Hvor mange tomme pigger som er på avdelingen (-1 per 5 tomme pigger).", "Ryddig servicedisk": "Ingen varer/drikkeflasker/søppel oppå eller i skuffer, ryddig og pent.", "Mangel pris": "-1 per produkt/plass som mangler.", "Trau": "-1 per trau som mangler pris eller ikke er fulle.", "Ryddig P&P": "Alle varer har lapp og i korrekt hylle, ingen produkter i batcave eller på gulv i gang." },
-            back: { "Ryddig support": "Ingen servicer/produkter uten info på benk eller i hylle, ingen produkter på gulv", "Ryddig RFC": "Ingen produkter uten RFC-lapp, ryddig arbeidsbenk", "Ryddig QI": "Ingen produkter uten merking, ikke rot på gulv", "Ryddig varemottak": "Ingen varer som ligger på gulv, papp ikke helt full", "Ryddig gang": "Ingen produkter i gang, ryddig så man kan kjøre paller, kun én stabel med paller ved behov" }
-        };
+        const deptCats = { "Tele": standardCats, "Data": standardCats, "A/V": standardCats, "MDA": standardCats, "SDA": standardCats, "Kjøkken": ["Produkt på gulv/rot", "Hull i livestock", "Ryddig salgsdisk", "Hull i utstilling", "Mangel pris", "Live utstilling"], "Front": ["Produkt på gulv/rot", "Tomme pigger", "Ryddig servicedisk", "Mangel pris", "Trau", "Ryddig P&P"], "Back": ["Ryddig support", "Ryddig RFC", "Ryddig QI", "Ryddig varemottak", "Ryddig gang"] };
+        const desc = { std: { "Produkt på gulv/rot": "Synlig søppel, rot på gulv eller nederste/øverste hylle i planogram. -1 per rotete område.", "Hull i livestock": "Mangler varer i hyllene som burde vært fylt. -1 per hel hylle som mangler varer.", "Tomme pigger": "Hvor mange tomme pigger som er på avdelingen (-1 per 5 tomme pigger).", "Ryddig salgsdisk": "Ingen varer/drikkeflasker/søppel oppå eller i skuffer, ryddig og pent.", "Hull i utstilling": "-1 per utstilling som mangler.", "Mangel pris": "-1 per produkt/plass som mangler.", "Live utstilling": "-1 per utstilling som ikke er live.", "Trau": "-1 per trau som mangler pris eller ikke er fulle." }, front: { "Produkt på gulv/rot": "Synlig søppel, rot på gulv eller nederste/øverste hylle i planogram. -1 per rotete område.", "Tomme pigger": "Hvor mange tomme pigger som er på avdelingen (-1 per 5 tomme pigger).", "Ryddig servicedisk": "Ingen varer/drikkeflasker/søppel oppå eller i skuffer, ryddig og pent.", "Mangel pris": "-1 per produkt/plass som mangler.", "Trau": "-1 per trau som mangler pris eller ikke er fulle.", "Ryddig P&P": "Alle varer har lapp og i korrekt hylle, ingen produkter i batcave eller på gulv i gang." }, back: { "Ryddig support": "Ingen servicer/produkter uten info på benk eller i hylle, ingen produkter på gulv", "Ryddig RFC": "Ingen produkter uten RFC-lapp, ryddig arbeidsbenk", "Ryddig QI": "Ingen produkter uten merking, ikke rot på gulv", "Ryddig varemottak": "Ingen varer som ligger på gulv, papp ikke helt full", "Ryddig gang": "Ingen produkter i gang, ryddig så man kan kjøre paller, kun én stabel med paller ved behov" } };
         let storeData = JSON.parse(localStorage.getItem('marketCheckData')) || {};
         let currentDept = departments[0], activeCat = "";
         departments.forEach(d => { if(!storeData[d]) { storeData[d]={score:100}; deptCats[d].forEach(c => storeData[d][c]={count:0, comment:"", photos:[]}); }});
