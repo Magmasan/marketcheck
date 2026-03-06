@@ -2,131 +2,419 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
     <title>Market Check Pro</title>
 
     <link rel="manifest" href="manifest.json">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#121212">
-    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1162/1162283.png">
-    <link rel="manifest" href='data:application/manifest+json,{"display":"standalone","start_url":"/","name":"Market Check Pro","short_name":"MCP","theme_color":"#121212","background_color":"#121212","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/1162/1162283.png","sizes":"512x512","type":"image/png"}]}'>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
 
     <style>
-        :root { --primary: #00A3FF; --success: #4CAF50; --orange: #FF9800; --danger: #F44336; --bg: #121212; --card: #1e1e1e; }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        html, body { width: 100%; margin: 0; padding: 0; overflow-x: hidden; background-color: var(--bg); }
-        body { color: white; font-family: -apple-system, sans-serif; display: flex; flex-direction: column; align-items: center; padding: 10px 0; }
-        .header, .check-container, .footer-area, .dept-nav { width: 94%; max-width: 500px; }
+        /* BRAND COLORS RESTORED */
+        :root { 
+            --primary: #0e2d7b; /* Royal Blue */
+            --primary-dark: #041753; /* Dark Navy */
+            --success: #78bf26; /* Brand Green */
+            --warning: #FF9800; /* Standard Orange */
+            --danger: #F44336;  /* Standard Red */
+            --bg: #121212; 
+            --card: #1e1e1e; 
+        }
+        
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: -apple-system, sans-serif; color: white; }
+        
+        html, body { width: 100%; max-width: 100vw; margin: 0; padding: 0; overflow-x: hidden; background-color: var(--bg); }
+        body { display: flex; flex-direction: column; align-items: center; padding: 10px 0; }
+        
+        #appUI { width: 100%; display: flex; flex-direction: column; align-items: center; background-color: var(--bg); min-height: 100vh; position: relative; z-index: 10; padding: 10px 0; }
+        
+        .header, .check-container, .footer-area, .dept-nav { width: 94%; max-width: 500px; margin: 0 auto; position: relative; z-index: 20; }
+        
         .dept-nav { display: flex; overflow-x: auto; gap: 6px; padding: 10px 0; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
-        .dept-btn { background: #2a2a2a; color: #aaa; border: 1px solid #444; padding: 10px 14px; border-radius: 20px; white-space: nowrap; cursor: pointer; font-size: 0.8rem; flex-shrink: 0; }
-        .dept-btn.active { background: var(--primary); color: white; border-color: var(--primary); font-weight: bold; }
-        .header { text-align: center; padding: 12px 0; background-color: var(--card); border-radius: 12px; margin-bottom: 15px; border: 1px solid #333; position: sticky; top: 0; z-index: 10; }
-        .score-display { font-size: 2.2rem; font-weight: 800; }
-        .row { background-color: var(--card); margin-bottom: 8px; padding: 10px; border-radius: 10px; display: flex; align-items: center; border: 1px solid #2a2a2a; width: 100%; justify-content: space-between; gap: 4px; }
-        .label { flex: 1; font-size: 0.82rem; font-weight: 500; white-space: normal; overflow-wrap: break-word; min-width: 0; }
-        .icon-btn { background: #2a2a2a; border: 1px solid #444; border-radius: 50%; width: 34px; height: 34px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; color: #666; flex-shrink: 0; }
+        .dept-btn { background: #2a2a2a; border: 1px solid #444; padding: 10px 14px; border-radius: 20px; white-space: nowrap; cursor: pointer; font-size: 0.8rem; flex-shrink: 0; color: #ccc; }
+        .dept-btn.active { background: var(--primary); border-color: var(--primary); font-weight: bold; color: white; }
+        
+        .header { text-align: center; padding: 12px 0; background-color: var(--card); border-radius: 12px; margin-bottom: 15px; border: 1px solid #333; position: sticky; top: 0; z-index: 30; }
+        .score-display { font-size: 2.2rem; font-weight: 800; color: white; }
+        
+        /* CSS GRID STABILITY */
+        .row { 
+            background-color: var(--card); 
+            margin-bottom: 8px; 
+            padding: 10px; 
+            border-radius: 10px; 
+            border: 1px solid #2a2a2a; 
+            width: 100%; 
+            display: grid; 
+            grid-template-columns: minmax(0, 1fr) auto auto; 
+            gap: 6px; 
+            align-items: center; 
+        }
+        
+        .label { font-size: 0.85rem; font-weight: 500; line-height: 1.3; word-wrap: break-word; color: white; }
+        
+        .counter-group { display: flex; align-items: center; gap: 4px; }
+        .action-group { display: flex; align-items: center; gap: 4px; }
+        
+        .icon-btn { background: #2a2a2a; border: 1px solid #444; border-radius: 50%; width: 34px; height: 34px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; color: #ccc; }
         .active-green { color: var(--success) !important; border-color: var(--success) !important; }
-        .counter-group { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
-        .btn { background-color: #333; color: white; border: 1px solid #555; width: 32px; height: 32px; border-radius: 6px; font-size: 1rem; }
+        .btn { background-color: #333; border: 1px solid #555; width: 32px; height: 32px; border-radius: 6px; font-size: 1rem; cursor: pointer; color: white; }
+        .count-val { min-width: 16px; text-align: center; font-size: 0.9rem; font-weight: bold; color: white; }
+
+        /* Report Overlays */
         #summaryOverlay, #fullReportOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; color: black; z-index: 100; overflow-y: auto; padding: 15px; }
+        #summaryOverlay *, #fullReportOverlay * { color: black; }
+        
         .summary-item { border-bottom: 1px solid #eee; padding: 12px 0; width: 100%; }
-        .report-img { width: 100%; border-radius: 8px; margin-top: 10px; display: block; }
+        .summary-item-content { display: flex; flex-wrap: wrap; gap: 2%; margin-top: 5px; }
+        .report-img { flex-basis: 48%; max-width: 48%; border-radius: 8px; margin-top: 5px; object-fit: cover; aspect-ratio: 4/3; }
+
+        /* Visuals */
         .circle-wrapper { text-align: center; margin: 15px 0; }
         .circle-container { position: relative; width: 140px; height: 140px; margin: 0 auto; }
         .circle-svg { transform: rotate(-90deg); width: 140px; height: 140px; }
         .circle-bg { fill: none; stroke: #eee; stroke-width: 14; }
         .circle-progress { fill: none; stroke: var(--success); stroke-width: 14; stroke-dasharray: 439.8; transition: stroke-dashoffset 0.6s ease; }
-        .circle-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 2rem; font-weight: 800; border-bottom: 4px solid #FFC107; color: #FFC107; }
+        .circle-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 2rem; font-weight: 800; border-bottom: 4px solid var(--success); }
+
         .leaderboard { width: 100%; margin: 15px 0; }
         .progress-track { width: 100%; height: 20px; background: #eee; border-radius: 10px; overflow: hidden; border: 1px solid #ddd; margin-top: 4px; }
         .progress-fill { height: 100%; }
-        .footer-area { display: flex; flex-direction: column; gap: 8px; padding-bottom: 110px; margin-top: 10px; }
-        .finalize-btn { position: fixed; bottom: 20px; width: 90%; max-width: 460px; background: var(--primary); color: white; border: none; padding: 15px; border-radius: 10px; font-weight: bold; font-size: 1.1rem; z-index: 50; cursor: pointer; left: 50%; transform: translateX(-50%); }
-        .reset-btn, .global-reset-btn, .info-btn { width: 100%; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 0.85rem; cursor: pointer; }
-        .reset-btn { background: transparent; color: var(--danger); border: 1px solid var(--danger); }
-        .global-reset-btn { background: var(--danger); color: white; border: none; }
-        .info-btn { background: #444; color: white; border: none; }
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; justify-content: center; align-items: center; pointer-events: auto; }
-        .modal { background: #2a2a2a; padding: 20px; border-radius: 15px; width: 90%; max-width: 400px; text-align: center; color: white; }
-        .modal textarea { width: 100%; height: 100px; background: #121212; color: white; padding: 10px; border: 1px solid #444; border-radius: 8px; margin-top: 10px; font-size: 16px; width:100%; }
-        .info-content { text-align: left; font-size: 0.85rem; line-height: 1.4; max-height: 400px; overflow-y: auto; padding-right: 5px; }
 
-        @media print {
-            @page { size: auto; margin: 10mm; }
-            body { background: white !important; padding: 0 !important; width: 100% !important; display: block !important; }
-            #appUI, .no-print, .modal-overlay, input { display: none !important; }
-            #summaryOverlay.active-report, #fullReportOverlay.active-report { position: static !important; display: block !important; width: 100% !important; }
-            .progress-fill { box-shadow: inset 0 0 0 1000px currentColor !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-            .summary-item-content { display: flex; flex-wrap: wrap; gap: 2%; }
-            .report-img { flex-basis: 48%; max-width: 48%; }
+        /* UNIFIED FOOTER BUTTONS */
+        .footer-area { display: flex; flex-direction: column; gap: 8px; padding-bottom: 40px; margin-top: 15px; }
+        
+        .footer-btn { 
+            width: 100%; 
+            padding: 15px; 
+            border-radius: 10px; 
+            font-weight: bold; 
+            font-size: 0.95rem; 
+            cursor: pointer; 
+            border: none; 
+            background-color: var(--primary); 
+            color: white; 
+            position: relative; 
+            z-index: 30; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
+
+        /* Modals */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; justify-content: center; align-items: center; }
+        .modal { background: #2a2a2a; padding: 20px; border-radius: 15px; width: 90%; max-width: 400px; text-align: center; }
+        .modal textarea { width: 100%; height: 100px; background: #121212; color: white; padding: 10px; border: 1px solid #444; border-radius: 8px; margin-top: 10px; font-size: 16px; width:100%; }
+        .info-content { text-align: left; font-size: 0.85rem; line-height: 1.4; max-height: 400px; overflow-y: auto; padding-right: 5px; margin-top: 10px; color: #eee; }
     </style>
 </head>
 <body>
-    <div id="appUI" style="width: 100%; display: flex; flex-direction: column; align-items: center;">
+    <div id="appUI">
         <div class="dept-nav" id="deptNav"></div>
         <div class="header">
-            <div id="currentDeptName" style="font-size: 0.75rem; opacity: 0.7; margin-bottom: 5px;">DEPARTMENT</div>
+            <div id="currentDeptName" style="font-size: 0.75rem; opacity: 0.7; margin-bottom: 5px; color: white;">DEPARTMENT</div>
             <div id="totalScore" class="score-display">100</div>
         </div>
         <div class="check-container" id="listContainer"></div>
+        
         <div class="footer-area">
-            <button class="reset-btn" onclick="resetDept()">⚠️ NULLSTILL AVDELING</button>
-            <button class="global-reset-btn" onclick="resetAll()">💥 NULLSTILL HELE SJEKKEN</button>
-            <button class="info-btn" onclick="openInfo()">ℹ️ KATEGORIBESKRIVELSER</button>
+            <button class="footer-btn" onclick="resetDept()">🔄 NULLSTILL AVDELING</button>
+            <button class="footer-btn" onclick="resetAll()">💥 NULLSTILL HELE SJEKKEN</button>
+            <button class="footer-btn" onclick="openInfo()">ℹ️ KATEGORIBESKRIVELSER</button>
+            <button class="footer-btn" id="shareBtn" onclick="generateAndSharePDF()">🚀 DEL RAPPORT</button>
+            <button class="footer-btn" onclick="openSummary()">📊 VIS RAPPORT</button>
         </div>
-        <button class="finalize-btn" onclick="openSummary()">VIS RAPPORT / PDF</button>
     </div>
-    <div class="modal-overlay" id="infoModal"><div class="modal"><h3 style="margin-top:0;" id="infoTitle">Info</h3><div class="info-content" id="infoBox"></div><button onclick="closeAll()" style="width:100%; padding:12px; background:var(--success); border:none; border-radius:8px; color:white; margin-top:15px; font-weight:bold;">Lukk</button></div></div>
-    <div id="summaryOverlay"><div class="no-print" style="display:flex; gap:10px; margin-bottom:15px;"><button onclick="closeAll()" style="flex:1; padding:10px; border-radius:8px; border:1px solid #ccc;">← Tilbake</button><button onclick="openFull()" style="flex:1; padding:10px; border-radius:8px; background:purple; color:white; font-weight:bold; border:none;">OVERSIKT</button></div><button onclick="window.print()" class="no-print" style="width:100%; padding:12px; background:var(--success); color:white; border:none; border-radius:8px; font-weight:bold; margin-bottom:15px;">LAGRE PDF (TOPP)</button><h1 id="reportHeader" style="margin:0; font-size: 1.4rem;">Rapport</h1><h2 id="reportDeptSub" style="margin:5px 0; color:#444; font-size:1rem;">Avdeling</h2><div class="circle-wrapper"><div class="circle-container"><svg class="circle-svg" viewBox="0 0 160 160"><circle class="circle-bg" cx="80" cy="80" r="70"></circle><circle class="circle-progress" id="deptScoreCircle" cx="80" cy="80" r="70"></circle></svg><div class="circle-text" id="deptScoreText">100</div></div></div><div id="summaryContent"></div><button onclick="window.print()" class="no-print" style="width:100%; padding:15px; background:var(--success); color:white; border:none; border-radius:8px; font-weight:bold; margin-top:20px;">LAGRE PDF (BUNN)</button></div>
-    <div id="fullReportOverlay"><div class="no-print" style="margin-bottom:15px;"><button onclick="closeAll()" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:8px;">← Tilbake</button></div><button onclick="window.print()" class="no-print" style="width:100%; padding:12px; background:var(--success); color:white; border:none; border-radius:8px; font-weight:bold; margin-bottom:15px;">LAGRE FULL PDF (TOPP)</button><h2 style="text-align:center; margin:0; font-size: 1.2rem;">Elkjøp Butikk-oversikt</h2><div class="circle-wrapper"><div class="circle-container"><svg class="circle-svg" viewBox="0 0 160 160"><circle class="circle-bg" cx="80" cy="80" r="70"></circle><circle class="circle-progress" id="fullScoreCircle" cx="80" cy="80" r="70"></circle></svg><div class="circle-text" id="fullScoreText">100</div></div></div><h3 style="border-bottom:2px solid #333; padding-bottom:5px; font-size: 0.95rem;">Avdeling Prestasjon</h3><div class="leaderboard" id="leaderboardCont"></div><button onclick="window.print()" class="no-print" style="width:100%; padding:15px; background:var(--success); color:white; border:none; border-radius:8px; font-weight:bold; margin-top:20px;">LAGRE FULL PDF (BUNN)</button></div>
-    <div class="modal-overlay" id="commentModal"><div class="modal"><h3>Kommentar</h3><textarea id="commentText"></textarea><button onclick="saveComment()" style="width:100%; padding:12px; background:var(--success); border:none; border-radius:8px; color:white; margin-top:10px; font-weight:bold;">OK</button></div></div>
-    <div class="modal-overlay" id="galleryModal"><div class="modal"><h3>Bilder</h3><div id="galleryGrid" style="display:grid; grid-template-columns:1fr 1fr; gap:8px; max-height:250px; overflow-y:auto; padding:5px;"></div><button onclick="closeAll()" style="width:100%; padding:10px; background:#444; color:white; border:none; border-radius:8px; margin-top:10px;">Lukk</button></div></div>
+
+    <div class="modal-overlay" id="infoModal"><div class="modal"><h3 id="infoTitle" style="margin-top:0;">Info</h3><div class="info-content" id="infoBox"></div><button onclick="closeAll()" style="width:100%; padding:12px; background:var(--success); border:none; border-radius:8px; margin-top:15px; font-weight:bold;">Lukk</button></div></div>
+    
+    <div id="summaryOverlay">
+        <div class="no-print" style="display:flex; gap:10px; margin-bottom:15px;">
+            <button onclick="closeAll()" style="flex:1; padding:10px; border-radius:8px; border:1px solid #ccc; background: white; color: black;">← Tilbake</button>
+            <button onclick="openFull()" style="flex:1; padding:10px; border-radius:8px; background:var(--primary); font-weight:bold; border:none; color:white;">OVERSIKT</button>
+        </div>
+        <h1 id="reportHeader" style="margin:0; font-size: 1.4rem;">Rapport</h1>
+        <h2 id="reportDeptSub" style="margin:5px 0; color:#444; font-size:1rem;">Avdeling</h2>
+        <div class="circle-wrapper"><div class="circle-container"><svg class="circle-svg" viewBox="0 0 160 160"><circle class="circle-bg" cx="80" cy="80" r="70"></circle><circle class="circle-progress" id="deptScoreCircle" cx="80" cy="80" r="70"></circle></svg><div class="circle-text" id="deptScoreText" style="color:black !important; border-bottom: 4px solid #ccc;">100</div></div></div>
+        <div id="summaryContent"></div>
+    </div>
+    
+    <div id="fullReportOverlay">
+        <div class="no-print" style="margin-bottom:15px;"><button onclick="closeAll()" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:8px; background: white; color: black;">← Tilbake</button></div>
+        <h2 style="text-align:center; margin:0; font-size: 1.2rem;">Butikk-oversikt</h2>
+        <div class="circle-wrapper"><div class="circle-container"><svg class="circle-svg" viewBox="0 0 160 160"><circle class="circle-bg" cx="80" cy="80" r="70"></circle><circle class="circle-progress" id="fullScoreCircle" cx="80" cy="80" r="70"></circle></svg><div class="circle-text" id="fullScoreText" style="color:black !important; border-bottom: 4px solid #ccc;">100</div></div></div>
+        <h3 style="border-bottom:2px solid #333; padding-bottom:5px; font-size: 0.95rem;">Avdeling Prestasjon</h3>
+        <div class="leaderboard" id="leaderboardCont"></div>
+    </div>
+
+    <div class="modal-overlay" id="commentModal"><div class="modal"><h3>Kommentar</h3><textarea id="commentText"></textarea><button onclick="saveComment()" style="width:100%; padding:12px; background:var(--success); border:none; border-radius:8px; margin-top:10px; font-weight:bold;">OK</button></div></div>
+    <div class="modal-overlay" id="galleryModal"><div class="modal"><h3>Bilder</h3><div id="galleryGrid" style="display:grid; grid-template-columns:1fr 1fr; gap:8px; max-height:250px; overflow-y:auto; padding:5px;"></div><button onclick="closeAll()" style="width:100%; padding:10px; background:#444; border:none; border-radius:8px; margin-top:10px;">Lukk</button></div></div>
+    
     <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none">
 
     <script>
-        /* SERVICE WORKER IN-PAGE TRIGGER */
-        if ('serviceWorker' in navigator) {
-          window.addEventListener('load', () => {
-            const blob = new Blob([`self.addEventListener('fetch', (e) => { e.respondWith(fetch(e.request)); });`], {type: 'application/javascript'});
-            navigator.serviceWorker.register(URL.createObjectURL(blob));
-          });
-        }
-
         const departments = ["Tele", "Data", "A/V", "MDA", "SDA", "Kjøkken", "Front", "Back"];
         const standardCats = ["Produkt på gulv/rot", "Hull i livestock", "Tomme pigger", "Ryddig salgsdisk", "Hull i utstilling", "Mangel pris", "Live utstilling", "Trau"];
         const deptCats = { "Tele": standardCats, "Data": standardCats, "A/V": standardCats, "MDA": standardCats, "SDA": standardCats, "Kjøkken": ["Produkt på gulv/rot", "Hull i livestock", "Ryddig salgsdisk", "Hull i utstilling", "Mangel pris", "Live utstilling"], "Front": ["Produkt på gulv/rot", "Tomme pigger", "Ryddig servicedisk", "Mangel pris", "Trau", "Ryddig P&P"], "Back": ["Ryddig support", "Ryddig RFC", "Ryddig QI", "Ryddig varemottak", "Ryddig gang"] };
-        const desc = { std: { "Produkt på gulv/rot": "Synlig søppel, rot på gulv eller nederste/øverste hylle i planogram. -1 per rotete område.", "Hull i livestock": "Mangler varer i hyllene som burde vært fylt. -1 per hel hylle som mangler varer.", "Tomme pigger": "Hvor mange tomme pigger som er på avdelingen (-1 per 5 tomme pigger).", "Ryddig salgsdisk": "Ingen varer/drikkeflasker/søppel oppå eller i skuffer, ryddig og pent.", "Hull i utstilling": "-1 per utstilling som mangler.", "Mangel pris": "-1 per produkt/plass som mangler.", "Live utstilling": "-1 per utstilling som ikke er live.", "Trau": "-1 per trau som mangler pris eller ikke er fulle." }, front: { "Produkt på gulv/rot": "Synlig søppel, rot på gulv eller nederste/øverste hylle i planogram. -1 per rotete område.", "Tomme pigger": "Hvor mange tomme pigger som er på avdelingen (-1 per 5 tomme pigger).", "Ryddig servicedisk": "Ingen varer/drikkeflasker/søppel oppå eller i skuffer, ryddig og pent.", "Mangel pris": "-1 per produkt/plass som mangler.", "Trau": "-1 per trau som mangler pris eller ikke er fulle.", "Ryddig P&P": "Alle varer har lapp og i korrekt hylle, ingen produkter i batcave eller på gulv i gang." }, back: { "Ryddig support": "Ingen servicer/produkter uten info på benk eller i hylle, ingen produkter på gulv", "Ryddig RFC": "Ingen produkter uten RFC-lapp, ryddig arbeidsbenk", "Ryddig QI": "Ingen produkter uten merking, ikke rot på gulv", "Ryddig varemottak": "Ingen varer som ligger på gulv, papp ikke helt full", "Ryddig gang": "Ingen produkter i gang, ryddig så man kan kjøre paller, kun én stabel med paller ved behov" } };
+        
+        const desc = { 
+            std: { "Produkt på gulv/rot": "Synlig søppel, rot på gulv eller nederste/øverste hylle i planogram. -1 per rotete område.", "Hull i livestock": "Mangler varer i hyllene som burde vært fylt. -1 per hel hylle som mangler varer.", "Tomme pigger": "Hvor mange tomme pigger som er på avdelingen (-1 per 5 tomme pigger).", "Ryddig salgsdisk": "Ingen varer/drikkeflasker/søppel oppå eller i skuffer, ryddig og pent.", "Hull i utstilling": "-1 per utstilling som mangler.", "Mangel pris": "-1 per produkt/plass som mangler prisskilt.", "Live utstilling": "-1 per utstilling som ikke er live.", "Trau": "-1 per trau som mangler pris eller ikke er fulle." }, 
+            front: { "Produkt på gulv/rot": "Synlig søppel, rot på gulv eller nederste/øverste hylle i planogram. -1 per rotete område.", "Tomme pigger": "Hvor mange tomme pigger som er på avdelingen (-1 per 5 tomme pigger).", "Ryddig servicedisk": "Ingen varer/drikkeflasker/søppel oppå eller i skuffer, ryddig og pent.", "Mangel pris": "-1 per produkt/plass som mangler prisskilt.", "Trau": "-1 per trau som mangler pris eller ikke er fulle.", "Ryddig P&P": "Alle varer har lapp og i korrekt hylle, ingen produkter i batcave eller på gulv i gang." }, 
+            back: { "Ryddig support": "Ingen servicer/produkter uten info på benk eller i hylle, ingen produkter på gulv", "Ryddig RFC": "Ingen produkter uten RFC-lapp, ryddig arbeidsbenk", "Ryddig QI": "Ingen produkter uten merking, ikke rot på gulv", "Ryddig varemottak": "Ingen varer som ligger på gulv, papp ikke helt full", "Ryddig gang": "Ingen produkter i gang, ryddig så man kan kjøre paller, kun én stabel med paller ved behov" } 
+        };
+        
         let storeData = JSON.parse(localStorage.getItem('marketCheckData')) || {};
         let currentDept = departments[0], activeCat = "";
+
         departments.forEach(d => { if(!storeData[d]) { storeData[d]={score:100}; deptCats[d].forEach(c => storeData[d][c]={count:0, comment:"", photos:[]}); }});
         function persist() { localStorage.setItem('marketCheckData', JSON.stringify(storeData)); }
-        function getColor(s) { return s>=90? '#4CAF50' : s>=80? '#FF9800' : '#F44336'; }
-        function initNav() { const nav = document.getElementById('deptNav'); nav.innerHTML = ""; departments.forEach(d => { const btn = document.createElement('button'); btn.className = `dept-btn ${d===currentDept?'active':''}`; btn.innerText = d; btn.onclick = () => { currentDept=d; initNav(); render(); }; nav.appendChild(btn); }); }
-        function render() { const cont = document.getElementById('listContainer'); cont.innerHTML = ""; document.getElementById('currentDeptName').innerText = currentDept.toUpperCase(); deptCats[currentDept].forEach(c => { const d = storeData[currentDept][c]; const row = document.createElement('div'); row.className = 'row'; row.innerHTML = `<div class="label">${c}</div><div class="counter-group"><button class="btn" onclick="upd('${c}',-1)">-</button><span class="count-val">${d.count}</span><button class="btn" onclick="upd('${c}',1)">+</button></div><button class="icon-btn ${d.comment?'active-green':''}" onclick="openComm('${c}')">💬</button><button class="icon-btn" onclick="triggerCam('${c}')">📷</button><button class="icon-btn ${d.photos.length>0?'active-green':''}" onclick="openGal('${c}')">🖼️</button>`; cont.appendChild(row); }); updateScore(); }
-        function openInfo() { const box = document.getElementById('infoBox'); box.innerHTML = ""; document.getElementById('infoTitle').innerText = `Info: ${currentDept}`; let activeList = {}; if(currentDept === "Front") activeList = desc.front; else if(currentDept === "Back") activeList = desc.back; else { activeList = {...desc.std}; if(currentDept === "Kjøkken") { delete activeList["Tomme pigger"]; delete activeList["Trau"]; } } Object.keys(activeList).forEach(k => { box.innerHTML += `<p style="margin-bottom:8px; border-bottom:1px solid #444; padding-bottom:4px;"><strong>${k}:</strong> ${activeList[k]}</p>`; }); document.getElementById('infoModal').style.display = 'flex'; }
+        
+        // STANDARD TRAFFIC LIGHT COLORS
+        function getColor(s) { 
+            return s >= 90 ? '#78bf26' : s >= 80 ? '#FF9800' : '#F44336'; 
+        }
+
+        function initNav() { 
+            const nav = document.getElementById('deptNav'); nav.innerHTML = ""; 
+            departments.forEach(d => { 
+                const btn = document.createElement('button'); btn.className = `dept-btn ${d===currentDept?'active':''}`; 
+                btn.innerText = d; btn.onclick = () => { currentDept=d; initNav(); render(); }; nav.appendChild(btn); 
+            }); 
+        }
+
+        function render() { 
+            const cont = document.getElementById('listContainer'); cont.innerHTML = ""; 
+            document.getElementById('currentDeptName').innerText = currentDept.toUpperCase(); 
+            
+            deptCats[currentDept].forEach(c => { 
+                const d = storeData[currentDept][c]; 
+                const row = document.createElement('div'); row.className = 'row'; 
+                row.innerHTML = `
+                    <div class="label">${c}</div>
+                    <div class="counter-group">
+                        <button class="btn" onclick="upd('${c}',-1)">-</button>
+                        <span class="count-val">${d.count}</span>
+                        <button class="btn" onclick="upd('${c}',1)">+</button>
+                    </div>
+                    <div class="action-group">
+                        <button class="icon-btn ${d.comment?'active-green':''}" onclick="openComm('${c}')">💬</button>
+                        <button class="icon-btn" onclick="triggerCam('${c}')">📷</button>
+                        <button class="icon-btn ${d.photos.length>0?'active-green':''}" onclick="openGal('${c}')">🖼️</button>
+                    </div>`; 
+                cont.appendChild(row); 
+            }); 
+            updateScore(); 
+        }
+
+        function openInfo() { 
+            const box = document.getElementById('infoBox'); box.innerHTML = ""; 
+            document.getElementById('infoTitle').innerText = `Info: ${currentDept}`; 
+            let activeList = {}; 
+            if(currentDept === "Front") activeList = desc.front; 
+            else if(currentDept === "Back") activeList = desc.back; 
+            else { 
+                activeList = {...desc.std}; 
+                if(currentDept === "Kjøkken") { delete activeList["Tomme pigger"]; delete activeList["Trau"]; } 
+            } 
+            Object.keys(activeList).forEach(k => { 
+                box.innerHTML += `<p style="margin-bottom:8px; border-bottom:1px solid #444; padding-bottom:4px;"><strong>${k}:</strong><br/>${activeList[k]}</p>`; 
+            }); 
+            document.getElementById('infoModal').style.display = 'flex'; 
+        }
+
         function upd(c,v) { if(storeData[currentDept][c].count+v>=0) { storeData[currentDept][c].count+=v; render(); } }
-        function updateScore() { let ded = 0; deptCats[currentDept].forEach(c => { let cnt = storeData[currentDept][c].count; ded += (c==="Tomme pigger"||c==="Mangel pris")? Math.floor(cnt/5) : cnt; }); storeData[currentDept].score = Math.max(0, 100-ded); const disp = document.getElementById('totalScore'); disp.innerText = storeData[currentDept].score; disp.style.color = getColor(storeData[currentDept].score); persist(); }
-        function anim(cId, tId, s) { const circ = document.getElementById(cId); circ.style.strokeDashoffset = 439.8 - (439.8 * s) / 100; circ.style.stroke = getColor(s); document.getElementById(tId).innerText = s; }
-        function openSummary() { closeAll(); const sum = document.getElementById('summaryOverlay'); sum.style.display = 'block'; sum.classList.add('active-report'); document.getElementById('reportDeptSub').innerText = `Avdeling: ${currentDept}`; anim('deptScoreCircle', 'deptScoreText', storeData[currentDept].score); const cont = document.getElementById('summaryContent'); cont.innerHTML = ""; deptCats[currentDept].forEach(c => { const d = storeData[currentDept][c]; if(d.count>0||d.comment||d.photos.length>0) { cont.innerHTML += `<div class="summary-item"><strong>[ ] ${c}</strong> (Avvik: ${d.count})<br>${d.comment?`<div style="color:#666; font-style:italic;">${d.comment}</div>`:''}<div class="summary-item-content">${d.photos.map(p=>`<img src="${p}" class="report-img">`).join('')}</div></div>`; } }); }
-        function openFull() { closeAll(); const full = document.getElementById('fullReportOverlay'); full.style.display = 'block'; full.classList.add('active-report'); const lbCont = document.getElementById('leaderboardCont'); lbCont.innerHTML = ""; let total = 0; departments.forEach(d => { const s = storeData[d].score; total += s; lbCont.innerHTML += `<div class="rank-row"><div style="display:flex; justify-content:space-between; font-weight:bold; font-size:0.85rem"><span>${d}</span><span>${s}%</span></div><div class="progress-track"><div class="progress-fill" style="width:${s}%; background-color:${getColor(s)}; color:${getColor(s)}"></div></div></div>`; }); anim('fullScoreCircle', 'fullScoreText', Math.round(total/departments.length)); }
+        
+        function updateScore() { 
+            let ded = 0; 
+            deptCats[currentDept].forEach(c => { 
+                let cnt = storeData[currentDept][c].count; 
+                ded += (c==="Tomme pigger"||c==="Mangel pris")? Math.floor(cnt/5) : cnt; 
+            }); 
+            storeData[currentDept].score = Math.max(0, 100-ded); 
+            const disp = document.getElementById('totalScore'); 
+            disp.innerText = storeData[currentDept].score; 
+            disp.style.color = getColor(storeData[currentDept].score); 
+            persist(); 
+        }
+
+        function anim(cId, tId, s) { 
+            const circ = document.getElementById(cId); 
+            const color = getColor(s);
+            if(circ) { circ.style.strokeDashoffset = 439.8 - (439.8 * s) / 100; circ.style.stroke = color; }
+            const txt = document.getElementById(tId);
+            if(txt) { 
+                txt.innerText = s; 
+                txt.style.color = color;
+                txt.style.borderBottomColor = color;
+            }
+        }
+
+        function openSummary() { 
+            closeAll(); 
+            document.getElementById('summaryOverlay').style.display = 'block'; 
+            document.getElementById('reportDeptSub').innerText = `Avdeling: ${currentDept}`; 
+            setTimeout(() => { anim('deptScoreCircle', 'deptScoreText', storeData[currentDept].score); }, 50);
+            
+            const cont = document.getElementById('summaryContent'); cont.innerHTML = ""; 
+            deptCats[currentDept].forEach(c => { 
+                const d = storeData[currentDept][c]; 
+                if(d.count>0||d.comment||d.photos.length>0) { 
+                    cont.innerHTML += `<div class="summary-item"><strong>[ ] ${c}</strong> (Avvik: ${d.count})<br>${d.comment?`<div style="color:#666; font-style:italic;">${d.comment}</div>`:''}<div class="summary-item-content">${d.photos.map(p=>`<img src="${p}" class="report-img">`).join('')}</div></div>`; 
+                } 
+            }); 
+        }
+
+        function openFull() { 
+            closeAll(); 
+            document.getElementById('fullReportOverlay').style.display = 'block'; 
+            const lbCont = document.getElementById('leaderboardCont'); lbCont.innerHTML = ""; 
+            let total = 0; 
+            departments.forEach(d => { 
+                const s = storeData[d].score; total += s; 
+                lbCont.innerHTML += `<div style="margin-bottom:10px;"><div style="display:flex; justify-content:space-between; font-weight:bold; font-size:0.85rem; color:black;"><span>${d}</span><span>${s}%</span></div><div class="progress-track"><div class="progress-fill" style="width:${s}%; background-color:${getColor(s)};"></div></div></div>`; 
+            }); 
+            setTimeout(() => { anim('fullScoreCircle', 'fullScoreText', Math.round(total/departments.length)); }, 50);
+        }
+
+        async function generateAndSharePDF() {
+            const btn = document.getElementById('shareBtn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = "⏳ GENERERER PDF...";
+            btn.disabled = true;
+
+            try {
+                const score = storeData[currentDept].score;
+                const scoreColorHex = getColor(score);
+
+                let content = [
+                    { text: 'Market Check Rapport', style: 'header', color: '#0e2d7b' },
+                    { text: `Avdeling: ${currentDept}`, style: 'subheader' },
+                    { text: `SCORE: ${score} / 100`, style: 'score', color: scoreColorHex },
+                    { text: '\n\n' } 
+                ];
+
+                let hasAvvik = false;
+
+                deptCats[currentDept].forEach(c => {
+                    const d = storeData[currentDept][c];
+                    if (d.count > 0 || d.comment || d.photos.length > 0) {
+                        hasAvvik = true;
+                        
+                        content.push({ text: `[ ] ${c} (Avvik: ${d.count})`, style: 'catHeader' });
+                        
+                        if (d.comment) {
+                            content.push({ text: `Kommentar: "${d.comment}"`, style: 'comment' });
+                        }
+
+                        if (d.photos.length > 0) {
+                            for (let i = 0; i < d.photos.length; i += 2) {
+                                let row = { columns: [], columnGap: 10, margin: [0, 5, 0, 10] };
+                                
+                                row.columns.push({ image: d.photos[i], width: 240 });
+                                
+                                if (d.photos[i+1]) {
+                                    row.columns.push({ image: d.photos[i+1], width: 240 });
+                                } else {
+                                    row.columns.push({ text: '', width: 240 }); 
+                                }
+                                content.push(row);
+                            }
+                        }
+                        content.push({ text: '\n', border: [0, 0, 0, 1], margin: [0, 5, 0, 5] });
+                    }
+                });
+
+                if (!hasAvvik) {
+                    content.push({ text: 'Ingen avvik registrert. Fantastisk jobbet!', style: 'success' });
+                }
+
+                var docDefinition = {
+                    content: content,
+                    styles: {
+                        header: { fontSize: 24, bold: true, margin: [0, 0, 0, 5] },
+                        subheader: { fontSize: 16, color: '#444444', margin: [0, 0, 0, 15] },
+                        score: { fontSize: 28, bold: true, margin: [0, 0, 0, 10] },
+                        catHeader: { fontSize: 14, bold: true, margin: [0, 10, 0, 5], color: '#111111' },
+                        comment: { fontSize: 12, italics: true, color: '#555555', margin: [0, 0, 0, 5] },
+                        success: { fontSize: 16, italics: true, color: '#78bf26', alignment: 'center', margin: [0, 20, 0, 0] }
+                    }
+                };
+
+                pdfMake.createPdf(docDefinition).getBlob(async (pdfBlob) => {
+                    const file = new File([pdfBlob], `Rapport_${currentDept}.pdf`, { type: 'application/pdf' });
+
+                    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                        await navigator.share({
+                            files: [file],
+                            title: `Market Check - ${currentDept}`,
+                            text: `Se vedlagt rapport for ${currentDept}. Score: ${score}/100.`
+                        });
+                    } else {
+                        const url = URL.createObjectURL(pdfBlob);
+                        const a = document.createElement('a'); 
+                        a.href = url; 
+                        a.download = `Rapport_${currentDept}.pdf`; 
+                        a.click();
+                    }
+                    
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                });
+
+            } catch (err) {
+                alert("Feil ved generering av PDF. Vennligst prøv igjen.");
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
         function resetDept() { if(confirm("Slette data for denne avdelingen?")) { deptCats[currentDept].forEach(c => storeData[currentDept][c]={count:0, comment:"", photos:[]}); render(); } }
         function resetAll() { if(confirm("Slette ALL butikkdata?")) { departments.forEach(d => { storeData[d]={score:100}; deptCats[d].forEach(c => storeData[d][c]={count:0, comment:"", photos:[]}); }); render(); } }
         function openComm(c) { activeCat=c; document.getElementById('commentText').value=storeData[currentDept][c].comment; document.getElementById('commentModal').style.display='flex'; setTimeout(()=>document.getElementById('commentText').focus(),150); }
         function saveComment() { storeData[currentDept][activeCat].comment = document.getElementById('commentText').value; closeAll(); render(); }
+        
+        document.getElementById('cameraInput').onchange = async (e) => { 
+            const file = e.target.files[0];
+            if(!file) return;
+            
+            try {
+                const bmp = await createImageBitmap(file);
+                const canvas = document.createElement('canvas');
+                let w = bmp.width;
+                let h = bmp.height;
+                const max = 1000;
+                
+                if(w > max || h > max) {
+                    if(w > h) { h = Math.round(h*(max/w)); w = max; }
+                    else { w = Math.round(w*(max/h)); h = max; }
+                }
+                
+                canvas.width = w; canvas.height = h;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(bmp, 0, 0, w, h);
+                const base64 = canvas.toDataURL('image/jpeg', 0.8);
+                
+                storeData[currentDept][activeCat].photos.push(base64);
+                render(); persist();
+            } catch(err) {
+                const r=new FileReader(); 
+                r.onload=(ev)=>{ storeData[currentDept][activeCat].photos.push(ev.target.result); render(); persist(); }; 
+                r.readAsDataURL(file); 
+            }
+        };
+
         function triggerCam(c) { activeCat=c; document.getElementById('cameraInput').click(); }
-        document.getElementById('cameraInput').onchange = (e) => { if(e.target.files[0]) { const r=new FileReader(); r.onload=(ev)=>{ storeData[currentDept][activeCat].photos.push(ev.target.result); render(); persist(); }; r.readAsDataURL(e.target.files[0]); } };
         function openGal(c) { activeCat=c; const g=document.getElementById('galleryGrid'); g.innerHTML=""; storeData[currentDept][c].photos.forEach((p,i)=>{ g.innerHTML+=`<div style="position:relative; width:100%; padding-top:100%; background-image:url(${p}); background-size:cover; border-radius:8px;"><button onclick="delPh(${i})" style="position:absolute; top:5px; right:5px; background:red; color:white; border:none; border-radius:4px; cursor:pointer;">🗑️</button></div>`; }); document.getElementById('galleryModal').style.display='flex'; }
         function delPh(i) { storeData[currentDept][activeCat].photos.splice(i,1); openGal(activeCat); render(); persist(); }
-        function closeAll() { document.querySelectorAll('.modal-overlay, #summaryOverlay, #fullReportOverlay').forEach(m => { m.style.display='none'; m.classList.remove('active-report'); }); }
+        function closeAll() { document.querySelectorAll('.modal-overlay, #summaryOverlay, #fullReportOverlay').forEach(m => { m.style.display='none'; }); }
+        
         initNav(); render();
     </script>
 </body>
 </html>
-
-
-
