@@ -15,13 +15,12 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
 
     <style>
-        /* BRAND COLORS RESTORED */
         :root { 
-            --primary: #0e2d7b; /* Royal Blue */
-            --primary-dark: #041753; /* Dark Navy */
-            --success: #78bf26; /* Brand Green */
-            --warning: #FF9800; /* Standard Orange */
-            --danger: #F44336;  /* Standard Red */
+            --primary: #0e2d7b; 
+            --primary-dark: #041753; 
+            --success: #78bf26; 
+            --warning: #FF9800; 
+            --danger: #F44336;  
             --bg: #121212; 
             --card: #1e1e1e; 
         }
@@ -42,7 +41,6 @@
         .header { text-align: center; padding: 12px 0; background-color: var(--card); border-radius: 12px; margin-bottom: 15px; border: 1px solid #333; position: sticky; top: 0; z-index: 30; }
         .score-display { font-size: 2.2rem; font-weight: 800; color: white; }
         
-        /* CSS GRID STABILITY */
         .row { 
             background-color: var(--card); 
             margin-bottom: 8px; 
@@ -66,7 +64,6 @@
         .btn { background-color: #333; border: 1px solid #555; width: 32px; height: 32px; border-radius: 6px; font-size: 1rem; cursor: pointer; color: white; }
         .count-val { min-width: 16px; text-align: center; font-size: 0.9rem; font-weight: bold; color: white; }
 
-        /* Report Overlays */
         #summaryOverlay, #fullReportOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; color: black; z-index: 100; overflow-y: auto; padding: 15px; }
         #summaryOverlay *, #fullReportOverlay * { color: black; }
         
@@ -74,7 +71,6 @@
         .summary-item-content { display: flex; flex-wrap: wrap; gap: 2%; margin-top: 5px; }
         .report-img { flex-basis: 48%; max-width: 48%; border-radius: 8px; margin-top: 5px; object-fit: cover; aspect-ratio: 4/3; }
 
-        /* Visuals */
         .circle-wrapper { text-align: center; margin: 15px 0; }
         .circle-container { position: relative; width: 140px; height: 140px; margin: 0 auto; }
         .circle-svg { transform: rotate(-90deg); width: 140px; height: 140px; }
@@ -86,7 +82,6 @@
         .progress-track { width: 100%; height: 20px; background: #eee; border-radius: 10px; overflow: hidden; border: 1px solid #ddd; margin-top: 4px; }
         .progress-fill { height: 100%; }
 
-        /* UNIFIED FOOTER BUTTONS */
         .footer-area { display: flex; flex-direction: column; gap: 8px; padding-bottom: 40px; margin-top: 15px; }
         
         .footer-btn { 
@@ -107,7 +102,6 @@
             gap: 8px;
         }
 
-        /* Modals */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; justify-content: center; align-items: center; }
         .modal { background: #2a2a2a; padding: 20px; border-radius: 15px; width: 90%; max-width: 400px; text-align: center; }
         .modal textarea { width: 100%; height: 100px; background: #121212; color: white; padding: 10px; border: 1px solid #444; border-radius: 8px; margin-top: 10px; font-size: 16px; width:100%; }
@@ -128,7 +122,7 @@
             <button class="footer-btn" onclick="resetAll()">💥 NULLSTILL HELE SJEKKEN</button>
             <button class="footer-btn" onclick="openInfo()">ℹ️ KATEGORIBESKRIVELSER</button>
             <button class="footer-btn" id="shareBtn" onclick="generateAndSharePDF()">🚀 DEL RAPPORT</button>
-            <button class="footer-btn" onclick="openSummary()">📊 VIS RAPPORT</button>
+            <button class="footer-btn" id="visRapportBtn" onclick="openSummary()">📊 VIS RAPPORT</button>
         </div>
     </div>
 
@@ -160,11 +154,35 @@
 
     <script>
         const departments = ["Tele", "Data", "A/V", "MDA", "SDA", "Kjøkken", "Front", "Back"];
+        
+        // UPDATED CATEGORY ARRAYS
         const standardCats = ["Produkt på gulv/rot", "Hull i livestock", "Tomme pigger", "Ryddig salgsdisk", "Hull i utstilling", "Mangel pris", "Live utstilling", "Trau"];
-        const deptCats = { "Tele": standardCats, "Data": standardCats, "A/V": standardCats, "MDA": standardCats, "SDA": standardCats, "Kjøkken": ["Produkt på gulv/rot", "Hull i livestock", "Ryddig salgsdisk", "Hull i utstilling", "Mangel pris", "Live utstilling"], "Front": ["Produkt på gulv/rot", "Tomme pigger", "Ryddig servicedisk", "Mangel pris", "Trau", "Ryddig P&P"], "Back": ["Ryddig support", "Ryddig RFC", "Ryddig QI", "Ryddig varemottak", "Ryddig gang"] };
+        const sdaCats = ["Produkt på gulv/rot", "Hull i livestock", "Tomme pigger", "Ryddig salgsdisk", "Hull i utstilling", "Mangel pris", "Trau"]; // Removed "Live utstilling"
+        const kjokkenCats = ["Produkt på gulv/rot", "Mangel energimerking", "Ryddig salgsdisk", "Hull i utstilling", "Mangel pris", "Live utstilling"]; // Swapped to Mangel energimerking
+
+        const deptCats = { 
+            "Tele": standardCats, 
+            "Data": standardCats, 
+            "A/V": standardCats, 
+            "MDA": standardCats, 
+            "SDA": sdaCats, 
+            "Kjøkken": kjokkenCats, 
+            "Front": ["Produkt på gulv/rot", "Tomme pigger", "Ryddig servicedisk", "Mangel pris", "Trau", "Ryddig P&P"], 
+            "Back": ["Ryddig support", "Ryddig RFC", "Ryddig QI", "Ryddig varemottak", "Ryddig gang"] 
+        };
         
         const desc = { 
-            std: { "Produkt på gulv/rot": "Synlig søppel, rot på gulv eller nederste/øverste hylle i planogram. -1 per rotete område.", "Hull i livestock": "Mangler varer i hyllene som burde vært fylt. -1 per hel hylle som mangler varer.", "Tomme pigger": "Hvor mange tomme pigger som er på avdelingen (-1 per 5 tomme pigger).", "Ryddig salgsdisk": "Ingen varer/drikkeflasker/søppel oppå eller i skuffer, ryddig og pent.", "Hull i utstilling": "-1 per utstilling som mangler.", "Mangel pris": "-1 per produkt/plass som mangler prisskilt.", "Live utstilling": "-1 per utstilling som ikke er live.", "Trau": "-1 per trau som mangler pris eller ikke er fulle." }, 
+            std: { 
+                "Produkt på gulv/rot": "Synlig søppel, rot på gulv eller nederste/øverste hylle i planogram. -1 per rotete område.", 
+                "Hull i livestock": "Mangler varer i hyllene som burde vært fylt. -1 per hel hylle som mangler varer.", 
+                "Tomme pigger": "Hvor mange tomme pigger som er på avdelingen (-1 per 5 tomme pigger).", 
+                "Ryddig salgsdisk": "Ingen varer/drikkeflasker/søppel oppå eller i skuffer, ryddig og pent.", 
+                "Hull i utstilling": "-1 per utstilling som mangler.", 
+                "Mangel pris": "-1 per produkt/plass som mangler prisskilt.", 
+                "Live utstilling": "-1 per utstilling som ikke er live.", 
+                "Trau": "-1 per trau som mangler pris eller ikke er fulle.",
+                "Mangel energimerking": "-1 per energimerking som mangler" // New description added
+            }, 
             front: { "Produkt på gulv/rot": "Synlig søppel, rot på gulv eller nederste/øverste hylle i planogram. -1 per rotete område.", "Tomme pigger": "Hvor mange tomme pigger som er på avdelingen (-1 per 5 tomme pigger).", "Ryddig servicedisk": "Ingen varer/drikkeflasker/søppel oppå eller i skuffer, ryddig og pent.", "Mangel pris": "-1 per produkt/plass som mangler prisskilt.", "Trau": "-1 per trau som mangler pris eller ikke er fulle.", "Ryddig P&P": "Alle varer har lapp og i korrekt hylle, ingen produkter i batcave eller på gulv i gang." }, 
             back: { "Ryddig support": "Ingen servicer/produkter uten info på benk eller i hylle, ingen produkter på gulv", "Ryddig RFC": "Ingen produkter uten RFC-lapp, ryddig arbeidsbenk", "Ryddig QI": "Ingen produkter uten merking, ikke rot på gulv", "Ryddig varemottak": "Ingen varer som ligger på gulv, papp ikke helt full", "Ryddig gang": "Ingen produkter i gang, ryddig så man kan kjøre paller, kun én stabel med paller ved behov" } 
         };
@@ -172,13 +190,25 @@
         let storeData = JSON.parse(localStorage.getItem('marketCheckData')) || {};
         let currentDept = departments[0], activeCat = "";
 
-        departments.forEach(d => { if(!storeData[d]) { storeData[d]={score:100}; deptCats[d].forEach(c => storeData[d][c]={count:0, comment:"", photos:[]}); }});
-        function persist() { localStorage.setItem('marketCheckData', JSON.stringify(storeData)); }
-        
-        // STANDARD TRAFFIC LIGHT COLORS
-        function getColor(s) { 
-            return s >= 90 ? '#78bf26' : s >= 80 ? '#FF9800' : '#F44336'; 
+        // DATA MIGRATION: Ensures new categories are safely injected into existing localStorage data without crashing
+        departments.forEach(d => { 
+            if(!storeData[d]) { storeData[d]={score:100}; }
+            deptCats[d].forEach(c => {
+                if(!storeData[d][c]) {
+                    storeData[d][c] = {count:0, comment:"", photos:[]};
+                }
+            });
+        });
+
+        function persist() { 
+            try {
+                localStorage.setItem('marketCheckData', JSON.stringify(storeData)); 
+            } catch (e) {
+                alert("Minnet er fullt! (Sannsynligvis for mange bilder totalt i appen). Vennligst slett noen bilder for å lagre flere endringer.");
+            }
         }
+
+        function getColor(s) { return s >= 90 ? '#78bf26' : s >= 80 ? '#FF9800' : '#F44336'; }
 
         function initNav() { 
             const nav = document.getElementById('deptNav'); nav.innerHTML = ""; 
@@ -212,23 +242,23 @@
             updateScore(); 
         }
 
+        // UPDATED DYNAMIC INFO BOX
         function openInfo() { 
             const box = document.getElementById('infoBox'); box.innerHTML = ""; 
             document.getElementById('infoTitle').innerText = `Info: ${currentDept}`; 
-            let activeList = {}; 
-            if(currentDept === "Front") activeList = desc.front; 
-            else if(currentDept === "Back") activeList = desc.back; 
-            else { 
-                activeList = {...desc.std}; 
-                if(currentDept === "Kjøkken") { delete activeList["Tomme pigger"]; delete activeList["Trau"]; } 
-            } 
-            Object.keys(activeList).forEach(k => { 
-                box.innerHTML += `<p style="margin-bottom:8px; border-bottom:1px solid #444; padding-bottom:4px;"><strong>${k}:</strong><br/>${activeList[k]}</p>`; 
+            
+            let activeList = (currentDept === "Front") ? desc.front : (currentDept === "Back") ? desc.back : desc.std; 
+            
+            // Only loops through the specific categories for the currently selected department
+            deptCats[currentDept].forEach(k => { 
+                if(activeList[k]) {
+                    box.innerHTML += `<p style="margin-bottom:8px; border-bottom:1px solid #444; padding-bottom:4px;"><strong>${k}:</strong><br/>${activeList[k]}</p>`; 
+                }
             }); 
             document.getElementById('infoModal').style.display = 'flex'; 
         }
 
-        function upd(c,v) { if(storeData[currentDept][c].count+v>=0) { storeData[currentDept][c].count+=v; render(); } }
+        function upd(c,v) { if(storeData[currentDept][c].count+v>=0) { storeData[currentDept][c].count+=v; persist(); render(); } }
         
         function updateScore() { 
             let ded = 0; 
@@ -240,7 +270,6 @@
             const disp = document.getElementById('totalScore'); 
             disp.innerText = storeData[currentDept].score; 
             disp.style.color = getColor(storeData[currentDept].score); 
-            persist(); 
         }
 
         function anim(cId, tId, s) { 
@@ -248,11 +277,7 @@
             const color = getColor(s);
             if(circ) { circ.style.strokeDashoffset = 439.8 - (439.8 * s) / 100; circ.style.stroke = color; }
             const txt = document.getElementById(tId);
-            if(txt) { 
-                txt.innerText = s; 
-                txt.style.color = color;
-                txt.style.borderBottomColor = color;
-            }
+            if(txt) { txt.innerText = s; txt.style.color = color; txt.style.borderBottomColor = color; }
         }
 
         function openSummary() { 
@@ -305,24 +330,15 @@
                     const d = storeData[currentDept][c];
                     if (d.count > 0 || d.comment || d.photos.length > 0) {
                         hasAvvik = true;
-                        
                         content.push({ text: `[ ] ${c} (Avvik: ${d.count})`, style: 'catHeader' });
-                        
-                        if (d.comment) {
-                            content.push({ text: `Kommentar: "${d.comment}"`, style: 'comment' });
-                        }
+                        if (d.comment) content.push({ text: `Kommentar: "${d.comment}"`, style: 'comment' });
 
                         if (d.photos.length > 0) {
                             for (let i = 0; i < d.photos.length; i += 2) {
                                 let row = { columns: [], columnGap: 10, margin: [0, 5, 0, 10] };
-                                
                                 row.columns.push({ image: d.photos[i], width: 240 });
-                                
-                                if (d.photos[i+1]) {
-                                    row.columns.push({ image: d.photos[i+1], width: 240 });
-                                } else {
-                                    row.columns.push({ text: '', width: 240 }); 
-                                }
+                                if (d.photos[i+1]) { row.columns.push({ image: d.photos[i+1], width: 240 }); } 
+                                else { row.columns.push({ text: '', width: 240 }); }
                                 content.push(row);
                             }
                         }
@@ -330,9 +346,7 @@
                     }
                 });
 
-                if (!hasAvvik) {
-                    content.push({ text: 'Ingen avvik registrert. Fantastisk jobbet!', style: 'success' });
-                }
+                if (!hasAvvik) content.push({ text: 'Ingen avvik registrert. Fantastisk jobbet!', style: 'success' });
 
                 var docDefinition = {
                     content: content,
@@ -348,70 +362,72 @@
 
                 pdfMake.createPdf(docDefinition).getBlob(async (pdfBlob) => {
                     const file = new File([pdfBlob], `Rapport_${currentDept}.pdf`, { type: 'application/pdf' });
-
                     if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                        await navigator.share({
-                            files: [file],
-                            title: `Market Check - ${currentDept}`,
-                            text: `Se vedlagt rapport for ${currentDept}. Score: ${score}/100.`
-                        });
+                        await navigator.share({ files: [file], title: `Market Check - ${currentDept}`, text: `Se vedlagt rapport for ${currentDept}. Score: ${score}/100.` });
                     } else {
-                        const url = URL.createObjectURL(pdfBlob);
-                        const a = document.createElement('a'); 
-                        a.href = url; 
-                        a.download = `Rapport_${currentDept}.pdf`; 
-                        a.click();
+                        const url = URL.createObjectURL(pdfBlob); const a = document.createElement('a'); a.href = url; a.download = `Rapport_${currentDept}.pdf`; a.click();
                     }
-                    
-                    btn.innerHTML = originalText;
-                    btn.disabled = false;
+                    btn.innerHTML = originalText; btn.disabled = false;
                 });
 
             } catch (err) {
                 alert("Feil ved generering av PDF. Vennligst prøv igjen.");
-                btn.innerHTML = originalText;
-                btn.disabled = false;
+                btn.innerHTML = originalText; btn.disabled = false;
             }
         }
 
-        function resetDept() { if(confirm("Slette data for denne avdelingen?")) { deptCats[currentDept].forEach(c => storeData[currentDept][c]={count:0, comment:"", photos:[]}); render(); } }
-        function resetAll() { if(confirm("Slette ALL butikkdata?")) { departments.forEach(d => { storeData[d]={score:100}; deptCats[d].forEach(c => storeData[d][c]={count:0, comment:"", photos:[]}); }); render(); } }
+        function resetDept() { if(confirm("Slette data for denne avdelingen?")) { deptCats[currentDept].forEach(c => storeData[currentDept][c]={count:0, comment:"", photos:[]}); persist(); render(); } }
+        function resetAll() { if(confirm("Slette ALL butikkdata?")) { departments.forEach(d => { storeData[d]={score:100}; deptCats[d].forEach(c => storeData[d][c]={count:0, comment:"", photos:[]}); }); persist(); render(); } }
         function openComm(c) { activeCat=c; document.getElementById('commentText').value=storeData[currentDept][c].comment; document.getElementById('commentModal').style.display='flex'; setTimeout(()=>document.getElementById('commentText').focus(),150); }
-        function saveComment() { storeData[currentDept][activeCat].comment = document.getElementById('commentText').value; closeAll(); render(); }
+        function saveComment() { storeData[currentDept][activeCat].comment = document.getElementById('commentText').value; persist(); closeAll(); render(); }
         
-        document.getElementById('cameraInput').onchange = async (e) => { 
+        document.getElementById('cameraInput').onchange = (e) => { 
             const file = e.target.files[0];
             if(!file) return;
             
-            try {
-                const bmp = await createImageBitmap(file);
+            const btn = document.getElementById('visRapportBtn');
+            const originalBtnText = btn.innerHTML;
+            btn.innerHTML = "⏳ LASTER BILDE..."; 
+
+            const url = URL.createObjectURL(file);
+            const img = new Image();
+            
+            img.onload = () => {
+                URL.revokeObjectURL(url);
                 const canvas = document.createElement('canvas');
-                let w = bmp.width;
-                let h = bmp.height;
-                const max = 1000;
+                let w = img.width;
+                let h = img.height;
+                const MAX_DIM = 600; 
                 
-                if(w > max || h > max) {
-                    if(w > h) { h = Math.round(h*(max/w)); w = max; }
-                    else { w = Math.round(w*(max/h)); h = max; }
+                if (w > MAX_DIM || h > MAX_DIM) {
+                    if (w > h) { h = Math.round(h * (MAX_DIM / w)); w = MAX_DIM; } 
+                    else { w = Math.round(w * (MAX_DIM / h)); h = MAX_DIM; }
                 }
                 
                 canvas.width = w; canvas.height = h;
                 const ctx = canvas.getContext('2d');
-                ctx.drawImage(bmp, 0, 0, w, h);
-                const base64 = canvas.toDataURL('image/jpeg', 0.8);
+                ctx.drawImage(img, 0, 0, w, h);
+                
+                const base64 = canvas.toDataURL('image/jpeg', 0.6);
                 
                 storeData[currentDept][activeCat].photos.push(base64);
-                render(); persist();
-            } catch(err) {
-                const r=new FileReader(); 
-                r.onload=(ev)=>{ storeData[currentDept][activeCat].photos.push(ev.target.result); render(); persist(); }; 
-                r.readAsDataURL(file); 
-            }
+                
+                try {
+                    persist();
+                } catch(err) {
+                    storeData[currentDept][activeCat].photos.pop();
+                }
+                
+                render();
+                btn.innerHTML = originalBtnText;
+            };
+            img.src = url;
+            e.target.value = ""; 
         };
 
         function triggerCam(c) { activeCat=c; document.getElementById('cameraInput').click(); }
         function openGal(c) { activeCat=c; const g=document.getElementById('galleryGrid'); g.innerHTML=""; storeData[currentDept][c].photos.forEach((p,i)=>{ g.innerHTML+=`<div style="position:relative; width:100%; padding-top:100%; background-image:url(${p}); background-size:cover; border-radius:8px;"><button onclick="delPh(${i})" style="position:absolute; top:5px; right:5px; background:red; color:white; border:none; border-radius:4px; cursor:pointer;">🗑️</button></div>`; }); document.getElementById('galleryModal').style.display='flex'; }
-        function delPh(i) { storeData[currentDept][activeCat].photos.splice(i,1); openGal(activeCat); render(); persist(); }
+        function delPh(i) { storeData[currentDept][activeCat].photos.splice(i,1); persist(); openGal(activeCat); render(); }
         function closeAll() { document.querySelectorAll('.modal-overlay, #summaryOverlay, #fullReportOverlay').forEach(m => { m.style.display='none'; }); }
         
         initNav(); render();
